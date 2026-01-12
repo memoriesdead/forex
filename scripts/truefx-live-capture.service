@@ -1,0 +1,21 @@
+[Unit]
+Description=TrueFX Live Forex Tick Capture
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/projects/forex
+ExecStart=/usr/bin/python3 /home/ubuntu/projects/forex/scripts/truefx_live_capture.py
+Restart=always
+RestartSec=10
+StandardOutput=append:/home/ubuntu/projects/forex/logs/truefx_live.log
+StandardError=append:/home/ubuntu/projects/forex/logs/truefx_live.log
+
+# Resource limits
+MemoryMax=512M
+CPUQuota=50%
+
+[Install]
+WantedBy=multi-user.target
