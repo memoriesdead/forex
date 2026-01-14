@@ -1,0 +1,6 @@
+{
+  "CLAUDE_MEM_WORKER_PORT": "37777",
+  "CLAUDE_MEM_WORKER_HOST": "127.0.0.1",
+  "CLAUDE_MEM_DATA_DIR": "C:/Users/kevin/.claude-mem",
+  "CLAUDE_MEM_LOG_LEVEL": "INFO"
+}
