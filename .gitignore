@@ -1,0 +1,63 @@
+# Environment files (NEVER commit)
+.env
+.env.backup
+.env_hostinger
+
+# SSH keys (NEVER commit)
+*.key
+*.pem
+*.pub
+
+# Project metadata (optional - keep local)
+.project_info
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Large data on Oracle Cloud (optional exclusion)
+# data/
+# data_cleaned/
+# training_package/
+# models/
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude
+.claude-mem/
+*.tar.gz
+*.gz
+tmpclaude-*
+temp_search.json

@@ -1,0 +1,166 @@
+{
+  "timezone": "America/Los_Angeles",
+  "sessions": {
+    "morning": {
+      "name": "London + New York Overlap - SIMPLIFIED",
+      "description": "3 pairs only - EUR/USD, GBP/USD, USD/JPY. Tight spreads, high liquidity.",
+      "time_start": "06:00",
+      "time_end": "09:00",
+      "pairs": ["EUR_USD", "GBP_USD", "USD_JPY"],
+      "strategy": "aggressive",
+      "min_confidence": 0.52,
+      "position_size_multiplier": 1.5,
+      "max_risk_per_trade_pct": 1.0,
+      "max_daily_risk_pct": 3.0,
+      "stop_loss_pips": 15,
+      "take_profit_pips": 40,
+      "trading_style": "breakout_trend",
+      "priority": 1
+    },
+    "afternoon": {
+      "name": "Early Asian Session - Tokyo/Sydney Open",
+      "description": "2 pairs only - USD/JPY, AUD/USD. Tokyo and Sydney markets active.",
+      "time_start": "15:00",
+      "time_end": "20:59",
+      "pairs": ["USD_JPY", "AUD_USD"],
+      "strategy": "conservative",
+      "min_confidence": 0.58,
+      "position_size_multiplier": 1.0,
+      "max_risk_per_trade_pct": 0.5,
+      "max_daily_risk_pct": 2.0,
+      "stop_loss_pips": 20,
+      "take_profit_pips": 30,
+      "trading_style": "range_mean_reversion",
+      "priority": 2
+    },
+    "evening": {
+      "name": "Tokyo Session - SIMPLIFIED",
+      "description": "2 pairs only - USD/JPY, AUD/USD. Asian markets.",
+      "time_start": "21:00",
+      "time_end": "23:59",
+      "pairs": ["USD_JPY", "AUD_USD"],
+      "strategy": "conservative",
+      "min_confidence": 0.60,
+      "position_size_multiplier": 1.0,
+      "max_risk_per_trade_pct": 0.5,
+      "max_daily_risk_pct": 2.0,
+      "stop_loss_pips": 20,
+      "take_profit_pips": 30,
+      "trading_style": "range_mean_reversion",
+      "priority": 2
+    },
+    "overnight": {
+      "name": "London Session + Tokyo/London Overlap",
+      "description": "EUR/USD, GBP/USD, EUR/JPY, GBP/JPY. London open, highest liquidity for EUR/GBP pairs.",
+      "time_start": "00:00",
+      "time_end": "05:59",
+      "pairs": ["EUR_USD", "GBP_USD", "EUR_JPY", "GBP_JPY"],
+      "strategy": "moderate",
+      "min_confidence": 0.55,
+      "position_size_multiplier": 1.2,
+      "max_risk_per_trade_pct": 0.75,
+      "max_daily_risk_pct": 2.5,
+      "stop_loss_pips": 18,
+      "take_profit_pips": 35,
+      "trading_style": "breakout_trend",
+      "priority": 1
+    },
+    "off_hours": {
+      "name": "Off Hours",
+      "description": "Not recommended for trading",
+      "time_start": "00:00",
+      "time_end": "23:59",
+      "pairs": [],
+      "strategy": "disabled",
+      "min_confidence": 0.85,
+      "position_size_multiplier": 0.5,
+      "max_risk_per_trade_pct": 0.25,
+      "max_daily_risk_pct": 1.0,
+      "priority": 3
+    }
+  },
+  "pair_metadata": {
+    "EUR_USD": {
+      "name": "Euro / US Dollar",
+      "best_sessions": ["morning", "overnight"],
+      "avg_spread_pips": 0.2,
+      "avg_daily_range_pips": 70,
+      "liquidity": "very_high"
+    },
+    "GBP_USD": {
+      "name": "British Pound / US Dollar",
+      "best_sessions": ["morning", "overnight"],
+      "avg_spread_pips": 0.5,
+      "avg_daily_range_pips": 100,
+      "liquidity": "very_high"
+    },
+    "USD_JPY": {
+      "name": "US Dollar / Japanese Yen",
+      "best_sessions": ["evening", "morning"],
+      "avg_spread_pips": 0.3,
+      "avg_daily_range_pips": 60,
+      "liquidity": "very_high"
+    },
+    "EUR_GBP": {
+      "name": "Euro / British Pound",
+      "best_sessions": ["morning"],
+      "avg_spread_pips": 0.5,
+      "avg_daily_range_pips": 50,
+      "liquidity": "high"
+    },
+    "USD_CHF": {
+      "name": "US Dollar / Swiss Franc",
+      "best_sessions": ["morning"],
+      "avg_spread_pips": 0.7,
+      "avg_daily_range_pips": 60,
+      "liquidity": "high"
+    },
+    "AUD_USD": {
+      "name": "Australian Dollar / US Dollar",
+      "best_sessions": ["evening"],
+      "avg_spread_pips": 0.6,
+      "avg_daily_range_pips": 60,
+      "liquidity": "high"
+    },
+    "EUR_JPY": {
+      "name": "Euro / Japanese Yen",
+      "best_sessions": ["evening", "morning", "overnight"],
+      "avg_spread_pips": 1.0,
+      "avg_daily_range_pips": 80,
+      "liquidity": "high"
+    },
+    "GBP_JPY": {
+      "name": "British Pound / Japanese Yen",
+      "best_sessions": ["evening", "morning", "overnight"],
+      "avg_spread_pips": 1.5,
+      "avg_daily_range_pips": 120,
+      "liquidity": "medium"
+    },
+    "USD_CAD": {
+      "name": "US Dollar / Canadian Dollar",
+      "best_sessions": ["morning"],
+      "avg_spread_pips": 0.8,
+      "avg_daily_range_pips": 60,
+      "liquidity": "high"
+    },
+    "AUD_JPY": {
+      "name": "Australian Dollar / Japanese Yen",
+      "best_sessions": ["evening"],
+      "avg_spread_pips": 1.2,
+      "avg_daily_range_pips": 70,
+      "liquidity": "medium"
+    }
+  },
+  "avoid_trading": {
+    "days": ["sunday_evening", "friday_afternoon"],
+    "holidays": [
+      "2026-01-01",
+      "2026-12-25"
+    ],
+    "major_news_events": {
+      "wait_minutes_before": 15,
+      "wait_minutes_after": 15,
+      "events": ["NFP", "FOMC", "CPI", "GDP"]
+    }
+  }
+}

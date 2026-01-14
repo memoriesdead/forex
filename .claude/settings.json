@@ -1,0 +1,177 @@
+{
+  "model": "claude-opus-4-5-20251101",
+
+  "permissions": {
+    "allow": ["*"],
+    "deny": [],
+    "ask": [],
+    "defaultMode": "bypassPermissions",
+    "elevatedAccess": true,
+    "crossDomainAccess": true
+  },
+
+  "autoApprove": {
+    "enabled": true,
+    "commands": ["*"],
+    "fileOperations": ["*"],
+    "toolUse": ["*"],
+    "networkRequests": ["*"],
+    "all": true
+  },
+
+  "confirmations": {
+    "fileWrite": false,
+    "fileDelete": false,
+    "fileCreate": false,
+    "commandExecution": false,
+    "dangerousOperations": false,
+    "destructiveActions": false,
+    "networkRequests": false,
+    "multipleFiles": false,
+    "largeFiles": false,
+    "systemChanges": false,
+    "threshold": "never",
+    "minimal": true
+  },
+
+  "automation": {
+    "level": "maximum",
+    "proactive": true,
+    "assumeIntent": "intelligent",
+    "autoExecute": true,
+    "autoDebug": true,
+    "autoOptimize": true,
+    "autoFix": true,
+    "selfCorrection": true,
+    "continueOnError": true,
+    "initiative": "maximum",
+    "autonomy": "high"
+  },
+
+  "vibeCoding": {
+    "enabled": true,
+    "philosophy": "move-fast",
+    "moveFast": true,
+    "iterateQuickly": true,
+    "rapidPrototype": true,
+    "fullImplementations": true,
+    "noPlaceholders": true,
+    "productionReady": true,
+    "modernPatterns": true,
+    "bestPractices": true,
+    "completeImplementation": true
+  },
+
+  "codeExecution": {
+    "autoRun": true,
+    "autoDebug": true,
+    "autoOptimize": true,
+    "parallel": true,
+    "timeout": 30000,
+    "maxRetries": 5,
+    "errorHandling": {
+      "autoRetry": true,
+      "exponentialBackoff": true,
+      "gracefulDegradation": true,
+      "selfHealing": true
+    }
+  },
+
+  "thinking": {
+    "enabled": true,
+    "extended": true,
+    "budget_tokens": 10000,
+    "chainOfThought": true,
+    "multiStepPlanning": true,
+    "selfReflection": true,
+    "showProcess": false
+  },
+
+  "contextWindow": {
+    "size": "maximum",
+    "tokenBudget": 190000
+  },
+
+  "toolExecution": {
+    "autoExecuteTools": true,
+    "parallelToolCalls": true,
+    "toolChaining": true,
+    "noConfirmation": true
+  },
+
+  "fileSystem": {
+    "read": true,
+    "write": true,
+    "delete": true,
+    "create": true,
+    "modify": true,
+    "recursive": true,
+    "unrestricted": true
+  },
+
+  "commandExecution": {
+    "enabled": true,
+    "requireConfirmation": false,
+    "allowAll": true,
+    "shell": true,
+    "scripts": true
+  },
+
+  "network": {
+    "enabled": true,
+    "unrestricted": true,
+    "apiCalls": true,
+    "webRequests": true
+  },
+
+  "safety": {
+    "guardrails": "minimal",
+    "allowExperimental": true,
+    "skipWarnings": true,
+    "trustUserIntent": true,
+    "dangerousCommands": {
+      "confirm": false
+    }
+  },
+
+  "output": {
+    "verbose": false,
+    "succinct": true,
+    "showProgress": true,
+    "streaming": true,
+    "directAnswers": true
+  },
+
+  "workspace": {
+    "autoSave": true,
+    "backups": true,
+    "trackChanges": false
+  },
+
+  "browserAccess": {
+    "enabled": true,
+    "allowLocalhost": true,
+    "ports": [3008],
+    "autoScreenshot": true,
+    "automation": true,
+    "headless": true,
+    "captureCommand": "npm run capture",
+    "screenshotPath": "screenshots"
+  },
+
+  "devServer": {
+    "url": "http://localhost:3008",
+    "autoRefresh": true,
+    "watchErrors": true,
+    "contextGathering": true,
+    "playwrightEnabled": true,
+    "autoCapture": true
+  },
+
+  "workflow": {
+    "captureBeforeChanges": true,
+    "captureAfterChanges": true,
+    "visualValidation": true,
+    "errorScreenshots": true
+  }
+}
