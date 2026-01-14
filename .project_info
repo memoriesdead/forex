@@ -1,0 +1,27 @@
+# FOREX TRADING PROJECT
+# Oracle Cloud Instance: 89.168.65.47
+# Remote Path: /home/ubuntu/projects/forex
+# Project ID: forex-trading-ml
+# Created: 2026-01-07
+#
+# WARNING: This project shares Oracle Cloud instance with 5 other projects
+# NEVER modify files outside of /home/ubuntu/projects/forex/
+#
+# Project Structure:
+# - data/          : Raw forex data from TrueFX, Dukascopy, Hostinger
+# - data_cleaned/  : Processed and cleaned datasets
+# - models/        : Trained ML model checkpoints
+# - logs/          : Training and trading logs
+# - scripts/       : Utility and sync scripts
+#
+# Other projects on same instance (DO NOT ACCESS):
+# - /home/ubuntu/projects/project2/
+# - /home/ubuntu/projects/project3/
+# - /home/ubuntu/projects/project4/
+# - /home/ubuntu/projects/project5/
+# - /home/ubuntu/projects/project6/
+#
+# Isolation enforced by:
+# - Dedicated project directory
+# - Path validation in all scripts
+# - Project registry at /home/ubuntu/projects/PROJECT_REGISTRY.md
