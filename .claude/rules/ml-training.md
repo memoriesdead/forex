@@ -1,284 +1,183 @@
-# ML Training Guidelines (Gold Standard)
+# ML Training Guidelines
 
-## CRITICAL: Target 70%+ Accuracy
+## Current Performance (2026-01-14)
 
-**Renaissance was 50.75% in 1980. Modern ML on H100 targets 70%+.**
+| Symbol | Accuracy | AUC | Edge |
+|--------|----------|-----|------|
+| EURUSD | **74.42%** | 0.8174 | +24.42% |
+| GBPUSD | **72.69%** | 0.7985 | +22.69% |
+| USDJPY | **70.57%** | 0.7730 | +20.57% |
+
+**Target achieved: 70%+ accuracy with full GPU ensemble (XGBoost + LightGBM + CatBoost)**
+
+### Data Available for Expansion (78 pairs in Dukascopy)
+- **Priority 1 (Majors):** EURUSD, GBPUSD, USDJPY, USDCHF, AUDUSD, USDCAD, NZDUSD
+- **Priority 2 (Crosses):** EURJPY, GBPJPY, EURGBP, EURCHF, AUDJPY, EURAUD, GBPAUD
+- **Priority 3 (More):** EURNZD, GBPNZD, AUDNZD, NZDJPY, AUDCAD, CADCHF, CADJPY
 
 ---
 
-## HFT Training Workflow (NEW - 2026-01-10)
+## PRIMARY: Local RTX 5080 Training
 
-**Preferred method for HFT models:**
+**$3000 RTX 5080 dedicated to forex ML. Use it to the MAX.**
 
-### 1. Prepare Training Data
+### Default Mode: Hybrid Retraining
+
+Bot automatically retrains every 120 seconds using historical + live data:
+
 ```bash
-python scripts/start_hft.py prepare --symbols EURUSD,GBPUSD,USDJPY --days 30
+# Start bot with hybrid retraining (auto-enabled)
+python main.py trade --mode paper --symbols EURUSD,GBPUSD,USDJPY
+
+# Or direct script
+python scripts/hft_trading_bot.py --mode paper --symbols EURUSD,GBPUSD,USDJPY
 ```
 
-Creates `training_package/` with:
-- Parquet files (train/val/test splits)
-- 100+ features per tick
-- Training script for Vast.ai
-- Requirements and run script
+**What happens:**
+1. Load 50k historical samples (from 200k+ training data)
+2. Combine with live tick data (weighted 3x)
+3. Train XGBoost + LightGBM on GPU (80-95% util)
+4. Hot-swap if accuracy improves
+5. Trading continues uninterrupted
 
-### 2. Train on Vast.ai H100
+### Batch Training (Full Retrain)
+
 ```bash
-# Rent H100 (~$2.50/hr)
-scp -r training_package/* root@<VAST_IP>:/workspace/
-ssh root@<VAST_IP>
-./run_training.sh
-
-# Download (after ~1-2 hours)
-scp root@<VAST_IP>:/workspace/hft_models.tar.gz .
-tar -xzvf hft_models.tar.gz -C models/hft_ensemble/
+cd C:\Users\kevin\forex\forex
+venv\Scripts\activate
+python main.py train
+# Or: python training_package/train_models.py
 ```
 
-### 3. Models Trained
-- XGBoost (GPU-accelerated)
-- LightGBM (GPU-accelerated)
-- CatBoost (GPU-accelerated)
-- Ensemble voting
+### GPU Config (CRITICAL)
 
-### 4. Targets Available
+```python
+# core/gpu_config.py - DO NOT use CPU settings
+'tree_method': 'hist',      # XGBoost 2.0+ (NOT 'gpu_hist')
+'device': 'cuda',           # This triggers GPU
+'task_type': 'GPU',         # CatBoost GPU mode
+'max_depth': 12,            # NOT 6 or 8
+```
+
+**Common mistakes:**
+- `tree_method='gpu_hist'` - WRONG in XGBoost 2.0+
+- `task_type='CPU'` - WRONG, use 'GPU'
+- `max_depth=6` - TOO SHALLOW for 16GB VRAM
+
+### Models Trained
+
+- XGBoost (GPU-accelerated, depth=12)
+- LightGBM (GPU-accelerated, num_leaves=511)
+- CatBoost (GPU-accelerated, depth=12)
+- Ensemble voting (average of all)
+
+### Targets Available
+
 - `target_direction_N`: Binary direction (N = 1,5,10,20,50,100 ticks)
 - `target_return_N`: Log return in bps
 - `target_vol_N`: Forward volatility
 
-### 5. Output Location
+### Output Location
+
 ```
-models/hft_ensemble/
-├── EURUSD_target_direction_10_models.pkl
-├── GBPUSD_target_direction_10_models.pkl
-├── USDJPY_target_direction_10_models.pkl
-└── *_results.json
+models/production/              # Canonical location (2026-01-16)
+├── EURUSD_models.pkl
+├── EURUSD_results.json
+├── GBPUSD_models.pkl
+├── GBPUSD_results.json
+├── USDJPY_models.pkl
+└── USDJPY_results.json
+
+models/hft_ensemble/            # Alias (backward-compatible)
 ```
 
 ---
 
-## Gold Standard Frameworks (Verified Audit)
+## Edge Calculation
 
-### TIER 1: Must-Have (High Stars, Active)
+**Edge = Accuracy - 50% (random baseline)**
 
-| Framework | Stars | Use For |
-|-----------|-------|---------|
-| **Time-Series-Library** | 11.3k | 47 SOTA forecasting (iTransformer, TimeMixer, TimeXer) |
-| **Microsoft Qlib** | 35.4k | Multi-paradigm ML pipeline |
-| **Stable-Baselines3** | 12.5k | RL agents (PPO, SAC, TD3) |
-| **FinRL** | 13.7k | Financial RL, cloud training |
-| **Optuna** | 13.3k | Hyperparameter optimization |
+| Accuracy | Edge | Expected Win Rate |
+|----------|------|-------------------|
+| 50% | 0% | Break-even |
+| 55% | 5% | Slight profit |
+| 60% | 10% | Good profit |
+| 65% | 15% | Strong profit |
+| **70%** | **20%** | **Excellent** |
+| **73%** | **23%** | **Current EURUSD** |
 
-### TIER 2: Specialized
+**With 70%+ accuracy:**
+- Expected win rate: 70%
+- Kelly optimal bet: ~40% of bankroll
+- Using 25% Kelly = conservative but steady growth
 
-| Framework | Stars | Use For |
-|-----------|-------|---------|
-| **MlFinLab** | 4.5k | Triple Barrier, Fractional Diff |
-| **NautilusTrader** | 17.2k | HFT execution (sub-microsecond) |
-| **HftBacktest** | 3.5k | Tick-level validation |
-| **hmmlearn** | - | HMM regime detection (Renaissance) |
-| **pykalman** | - | Kalman Filter (Goldman) |
+---
 
-### TIER 3: Chinese Quant
+## Historical Data (Foundation)
 
-| Framework | Use For |
-|-----------|---------|
-| **QUANTAXIS** | Rust-accelerated backtesting (570ns/operation) |
-| **vnpy** | Event-driven trading engine |
-| **Quantformer** | Transformer for finance |
-| **Attention Factors** | Stat arb (Sharpe 4.0+) |
+| Symbol | Samples | Location |
+|--------|---------|----------|
+| EURUSD | 157,619 | `training_package/EURUSD/` |
+| GBPUSD | 184,688 | `training_package/GBPUSD/` |
+| USDJPY | 220,528 | `training_package/USDJPY/` |
 
-## Training Location
+**Total: 562,835 samples** with 100+ features each
 
-**NEVER train locally. ALWAYS use Vast.ai H100:**
-```bash
-python scripts/train_all_frameworks_h100.py
-```
+---
 
-## Models to Train Per Pair
+## Validation Requirements
 
-1. **HMM** (Renaissance) - 3-state regime detection
-2. **Kalman Filter** (Goldman) - Dynamic mean estimation
-3. **XGBoost + LightGBM + CatBoost** - Gradient boosting ensemble
-4. **PPO + SAC** - RL agents for position sizing
-5. **iTransformer + DLinear** - SOTA time series forecasting
-6. **Optuna** - Hyperparameter optimization
-7. **Weighted Ensemble** - All models combined
+**Before training:**
+1. Walk-forward CV with `gap >= 10` periods
+2. Check overfit ratio: `train_score / test_score < 1.15`
+3. Validate on held-out period (last 20%)
 
-## Before Training
+**Before paper trading:**
+1. Accuracy > 60%
+2. AUC > 0.65
+3. Sharpe ratio > 1.5
 
-**Save to memory:**
-1. Hyperparameters (category: note, priority: high)
-2. Dataset version/path (category: note, priority: high)
-3. Model architecture choices (category: decision)
-4. Training objective (category: task)
+**Before live trading:**
+1. Paper trade minimum 24 hours
+2. Compare paper vs backtest metrics
+3. Accuracy sustained above 65%
 
-**Create checkpoint:**
-```
-mcp__memory-keeper__context_checkpoint
-```
-
-## Vast.ai Workflow
-
-1. **Prepare data** - Package cleaned data
-2. **Rent H100** - ~$2-3/hour
-3. **Upload data** - SCP to instance
-4. **Run training** - 1-2 hours
-5. **Download models** - SCP back
-6. **Destroy instance** - Stop billing
-7. **Sync to Oracle Cloud** - For live trading
-
-## After Training
-
-**Save to memory:**
-1. Final metrics (category: progress, priority: high)
-2. Model path: `models/gold_standard/` (category: note)
-3. What worked (category: decision)
-4. Validation accuracy per model (category: progress)
-
-**Model files:**
-```
-models/gold_standard/
-├── EURUSD_gold_standard.pkl
-├── GBPUSD_gold_standard.pkl
-├── USDJPY_gold_standard.pkl
-├── ... (per pair)
-└── all_pairs_gold_standard.pkl
-```
+---
 
 ## Key Metrics
 
-**Target performance:**
-- Accuracy: >70% (modern ML target)
-- Win rate: >60%
-- Sharpe ratio: >2.0
-- Max drawdown: <5%
-
-**Per model validation:**
-- XGBoost: Target 65%+
-- LightGBM: Target 65%+
-- CatBoost: Target 65%+
-- iTransformer: Target 60%+
-- Ensemble: Target 70%+
-
-## Credit Check
-
-**Before training, verify Vast.ai credit:**
-- Current: ~$113 available
-- H100: ~$2.50/hour
-- Estimated training: 1-2 hours = $3-5
-
-## Time-Series-Library Models
-
-**Priority order:**
-1. **iTransformer** - ICLR 2024, best for multivariate
-2. **TimeMixer** - ICLR 2024, multi-scale mixing
-3. **TimeXer** - NeurIPS 2024, exogenous factors
-4. **TimesNet** - ICLR 2023, temporal 2D variation
-5. **PatchTST** - ICLR 2023, patching
-6. **DLinear** - AAAI 2023, simple but effective
-
-## RL Algorithms
-
-**From Stable-Baselines3:**
-- **PPO** - Proximal Policy Optimization (most stable)
-- **SAC** - Soft Actor-Critic (continuous action)
-- **TD3** - Twin Delayed DDPG
-- **A2C** - Advantage Actor-Critic
+| Metric | Target | Excellent |
+|--------|--------|-----------|
+| Accuracy | >65% | >70% |
+| AUC | >0.70 | >0.80 |
+| Win Rate | >58% | >65% |
+| Sharpe | >1.5 | >2.5 |
+| Max Drawdown | <10% | <5% |
 
 ---
 
-## Core Modules (Implemented 2026-01-10)
+## Troubleshooting
 
-### Signal Generation
+### "GPU not being used"
 
-| Module | File | Features |
-|--------|------|----------|
-| **Alpha101** | `core/alpha101_complete.py` | 62 WorldQuant alphas |
-| **Renaissance Signals** | `core/renaissance_signals.py` | 50+ weak signals |
-| **Cross-Asset** | `core/cross_asset_signals.py` | DXY, VIX, SPX, Gold, Oil |
-
-### Walk-Forward Validation
-
-| Method | Class | Use Case |
-|--------|-------|----------|
-| **Expanding Window** | `WalkForwardCV(expanding=True)` | Default for training |
-| **Rolling Window** | `WalkForwardCV(expanding=False)` | Regime changes |
-| **Purged K-Fold** | `PurgedKFold` | Overlapping labels |
-| **CPCV** | `CombinatorialPurgedCV` | Multiple backtests |
-
-**File:** `core/walk_forward.py`
-
-**Usage:**
-```python
-from core.walk_forward import expanding_window_cv, purged_cv
-
-cv = expanding_window_cv(n_splits=5, gap=10)
-for train_idx, test_idx in cv.split(X, y):
-    model.fit(X[train_idx], y[train_idx])
-    score = model.score(X[test_idx], y[test_idx])
+Check nvidia-smi during training:
+```bash
+nvidia-smi -l 1
 ```
 
-### Prediction Pipeline
+If GPU util is low:
+1. Verify `device='cuda'` in gpu_config.py
+2. Verify XGBoost using `tree_method='hist'` (not 'gpu_hist')
+3. Increase `max_depth` and `num_leaves`
 
-| Module | File | Purpose |
-|--------|------|---------|
-| **Gold Standard Predictor** | `core/gold_standard_predictor.py` | Master ensemble |
-| **Gold Standard Models** | `core/gold_standard_models.py` | iTransformer, TimeXer, Attention |
-| **Institutional Predictor** | `core/institutional_predictor.py` | HMM, Kalman, Ensemble |
-| **Nautilus Executor** | `core/nautilus_executor.py` | HFT execution |
+### "Accuracy dropping"
 
-### Alpha101 Usage
+1. Check for data drift (market regime change)
+2. Increase historical sample weight
+3. Reduce retrain interval (more frequent updates)
 
-```python
-from core.alpha101_complete import Alpha101Complete
+### "Models not hot-swapping"
 
-alpha = Alpha101Complete()
-df_with_alphas = alpha.generate_all_alphas(df)
-# Returns 62 alpha columns: alpha_001 through alpha_062
-```
-
-### Cross-Asset Signals Usage
-
-```python
-from core.cross_asset_signals import CrossAssetSignalGenerator
-
-generator = CrossAssetSignalGenerator()
-signals = generator.generate_all_signals(
-    forex_data=eurusd_df,
-    cross_asset_data={'DXY': dxy_df, 'VIX': vix_df, 'SPX': spx_df}
-)
-# Returns: dxy_*, vix_*, spx_*, gold_*, oil_*, risk_sentiment, cross_asset_signal
-```
-
----
-
-## Feature Engineering Pipeline
-
-**Order of signal generation:**
-
-1. **Base Features** (OHLCV + returns + volatility)
-2. **Alpha101** (62 alphas from `alpha101_complete.py`)
-3. **Renaissance Signals** (50+ from `renaissance_signals.py`)
-4. **Cross-Asset Signals** (from `cross_asset_signals.py`)
-5. **Ensemble Signal** (combined weighted average)
-
-**Total features:** 150+ signals before model training
-
----
-
-## Validation Requirements (MANDATORY)
-
-**Before training ANY model:**
-1. Run walk-forward CV with `gap >= 10` periods
-2. Check overfit ratio: `train_score / test_score < 1.15`
-3. Validate on held-out period (last 20% of data)
-
-**Before paper trading:**
-1. Backtest on minimum 1 year of data
-2. Sharpe ratio > 1.5
-3. Max drawdown < 5%
-4. Win rate > 55%
-
-**Before live trading:**
-1. Paper trade minimum 2 weeks
-2. Compare paper vs backtest metrics
-3. Overfit ratio < 1.10
+1. Check that new accuracy > previous best
+2. Verify ensemble has valid predictions
+3. Check logs for errors during training

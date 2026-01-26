@@ -46,26 +46,29 @@ def print_banner():
 """)
 
 
-def check_ssh_tunnel():
-    """Check if SSH tunnel to Oracle Cloud is running."""
+def check_ib_gateway():
+    """Check if IB Gateway is accessible (local Docker on port 4004)."""
     import socket
+    import os
+
+    port = int(os.getenv('IB_PORT', 4004))
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    result = sock.connect_ex(('localhost', 4001))
+    result = sock.connect_ex(('localhost', port))
     sock.close()
 
     if result == 0:
-        print("[OK] SSH Tunnel: Connected (localhost:4001)")
+        print(f"[OK] IB Gateway: Port {port} open")
         return True
     else:
-        print("[X] SSH Tunnel: Not connected")
-        print("  Run: powershell -File scripts\\start_oracle_tunnel.ps1")
+        print(f"[X] IB Gateway: Port {port} not responding")
+        print("  Run: docker start ibgateway")
         return False
 
 
 def check_models():
     """Check if trained models exist."""
-    model_dir = PROJECT_ROOT / "models" / "hft_ensemble"
+    model_dir = PROJECT_ROOT / "models" / "production"
 
     if model_dir.exists():
         models = list(model_dir.glob("*.pkl"))
@@ -97,35 +100,38 @@ def check_data():
 
 def cmd_status():
     """Check system status."""
+    import os
+
     print("\n=== System Status ===\n")
 
-    tunnel_ok = check_ssh_tunnel()
+    ib_ok = check_ib_gateway()
     models_ok = check_models()
     data_ok = check_data()
 
-    # Check IB Gateway
+    # Check IB Gateway API connection
     print()
-    if tunnel_ok:
+    if ib_ok:
         try:
             from ib_insync import IB
+            port = int(os.getenv('IB_PORT', 4004))
             ib = IB()
-            ib.connect('localhost', 4001, clientId=999, timeout=5)
+            ib.connect('localhost', port, clientId=999, timeout=5)
             account = ib.managedAccounts()[0] if ib.managedAccounts() else "Unknown"
-            print(f"[OK] IB Gateway: Connected (Account: {account})")
+            print(f"[OK] IB Gateway API: Connected (Account: {account})")
             ib.disconnect()
         except Exception as e:
-            print(f"[X] IB Gateway: Not responding ({e})")
+            print(f"[X] IB Gateway API: Not responding ({e})")
 
     print("\n=== Readiness ===")
 
-    if models_ok and tunnel_ok:
+    if models_ok and ib_ok:
         print("\n[OK] READY FOR PAPER TRADING")
         print("  Run: python scripts/start_hft.py paper")
     elif data_ok:
         print("\n-> Next Step: Train models on Vast.ai")
         print("  1. Upload training_package/ to Vast.ai")
         print("  2. Run: ./run_training.sh")
-        print("  3. Download models to models/hft_ensemble/")
+        print("  3. Download models to models/production/")
     else:
         print("\n-> Next Step: Prepare training data")
         print("  Run: python scripts/start_hft.py prepare")
@@ -151,16 +157,17 @@ def cmd_prepare(symbols: str = "EURUSD,GBPUSD,USDJPY", days: int = 30):
     print("3. SSH: ssh root@<VAST_IP>")
     print("4. Run: ./run_training.sh")
     print("5. Download: scp root@<VAST_IP>:/workspace/hft_models.tar.gz .")
-    print("6. Extract to: models/hft_ensemble/")
+    print("6. Extract to: models/production/")
 
 
-def cmd_paper(symbols: str = "EURUSD,GBPUSD"):
-    """Start paper trading."""
+def cmd_paper(symbols: str = "EURUSD,GBPUSD", use_online_learning: bool = True):
+    """Start paper trading with Chinese quant-style online learning."""
     print("\n=== Starting Paper Trading ===\n")
+    print("Chinese Quant Online Learning: " + ("ENABLED" if use_online_learning else "DISABLED"))
 
     # Check prerequisites
-    if not check_ssh_tunnel():
-        print("\nPlease start SSH tunnel first.")
+    if not check_ib_gateway():
+        print("\nPlease start IB Gateway Docker: docker start ibgateway")
         return
 
     if not check_models():
@@ -172,6 +179,10 @@ def cmd_paper(symbols: str = "EURUSD,GBPUSD"):
         "--mode", "paper",
         "--symbols", symbols
     ]
+
+    # Add online learning flag (enabled by default)
+    if not use_online_learning:
+        cmd.append("--no-online-learning")
 
     subprocess.run(cmd, cwd=str(PROJECT_ROOT))
 
@@ -185,8 +196,8 @@ def cmd_live(symbols: str = "EURUSD"):
         print("Cancelled.")
         return
 
-    if not check_ssh_tunnel():
-        print("\nPlease start SSH tunnel first.")
+    if not check_ib_gateway():
+        print("\nPlease start IB Gateway Docker: docker start ibgateway")
         return
 
     if not check_models():
@@ -219,25 +230,26 @@ def cmd_backtest(symbols: str = "EURUSD", days: int = 7):
 
 
 def cmd_tunnel():
-    """Start SSH tunnel to Oracle Cloud."""
-    print("\n=== Starting SSH Tunnel ===\n")
+    """Start IB Gateway Docker container."""
+    print("\n=== IB Gateway Docker ===\n")
 
-    # Windows
-    if sys.platform == "win32":
-        ps_script = PROJECT_ROOT / "scripts" / "start_oracle_tunnel.ps1"
-        if ps_script.exists():
-            subprocess.Popen(
-                ["powershell", "-File", str(ps_script)],
-                creationflags=subprocess.CREATE_NEW_CONSOLE
-            )
-            print("SSH tunnel started in new window")
+    # Check if container exists
+    result = subprocess.run(
+        ["docker", "ps", "-a", "--filter", "name=ibgateway", "--format", "{{.Status}}"],
+        capture_output=True, text=True
+    )
+
+    if result.stdout.strip():
+        if "Up" in result.stdout:
+            print("IB Gateway already running")
         else:
-            print("SSH tunnel script not found")
-            print("Manual command:")
-            print('  ssh -i "ssh-key-2026-01-07 (1).key" -L 4001:localhost:4001 ubuntu@89.168.65.47 -N')
+            print("Starting IB Gateway container...")
+            subprocess.run(["docker", "start", "ibgateway"])
+            print("IB Gateway started")
     else:
-        print("Run manually:")
-        print('  ssh -L 4001:localhost:4001 ubuntu@89.168.65.47 -N &')
+        print("IB Gateway container not found.")
+        print("Run this to create it:")
+        print('  docker run -d --name ibgateway --restart=always -p 4001:4001 -p 4002:4002 -p 4003:4003 -p 4004:4004 -p 5900:5900 -e TWS_USERID=KevinChandarasane -e "TWS_PASSWORD=Jackie12345!!" -e TRADING_MODE=paper -e TWS_ACCEPT_INCOMING=yes -e READ_ONLY_API=no -e VNC_SERVER_PASSWORD=ibgateway ghcr.io/gnzsnz/ib-gateway:stable')
 
 
 def main():
@@ -251,12 +263,16 @@ def main():
                         help='Trading symbols')
     parser.add_argument('--days', type=int, default=30,
                         help='Days of data')
+    parser.add_argument('--no-online-learning', action='store_true',
+                        help='Disable Chinese quant online learning (default: enabled)')
     args = parser.parse_args()
+
+    use_online = not args.no_online_learning
 
     commands = {
         'status': cmd_status,
         'prepare': lambda: cmd_prepare(args.symbols, args.days),
-        'paper': lambda: cmd_paper(args.symbols),
+        'paper': lambda: cmd_paper(args.symbols, use_online),
         'live': lambda: cmd_live(args.symbols),
         'backtest': lambda: cmd_backtest(args.symbols, args.days),
         'tunnel': cmd_tunnel,
