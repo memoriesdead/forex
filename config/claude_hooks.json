@@ -1,0 +1,48 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run C:/Users/kevin/.claude-mem/scripts/context-hook.js"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run C:/Users/kevin/.claude-mem/scripts/save-hook.js"
+          }
+        ]
+      }
+    ],
+    "UserMessageSubmit": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run C:/Users/kevin/.claude-mem/scripts/user-message-hook.js"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun run C:/Users/kevin/.claude-mem/scripts/new-hook.js"
+          }
+        ]
+      }
+    ]
+  }
+}

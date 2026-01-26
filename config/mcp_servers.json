@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "memory-keeper": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@anthropic/mcp-proxy",
+        "http://localhost:3847"
+      ],
+      "env": {
+        "MCP_PROXY_URL": "http://localhost:3847"
+      }
+    },
+    "ide": {
+      "command": "npx",
+      "args": ["-y", "@anthropic/claude-code-mcp"]
+    }
+  },
+  "_comment": "Requires SSH tunnel to Oracle Cloud first: powershell -File scripts/start_oracle_tunnel.ps1"
+}
